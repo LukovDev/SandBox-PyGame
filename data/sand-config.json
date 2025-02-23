@@ -1,9 +1,9 @@
 {
     "fps": 100,
-    "cell-size": 8,
+    "cell-size": 16,
     "grid-size": [
-        64,
-        64
+        48,
+        48
     ],
     "is-pause": false,
     "grid-enable": false,

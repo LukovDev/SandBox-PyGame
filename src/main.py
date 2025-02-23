@@ -117,13 +117,57 @@ def load_map() -> None:
                 grid[y][x] = cell
 
 
+# Обновление физики:
+def phys_update() -> None:
+    processed = [[False] * len(grid[0]) for _ in range(len(grid))]
+
+    # Обработка снизу вверх (от ny до 0):
+    for y in range(len(grid) - 1, -1, -1):
+        for x in range(len(grid[y])):
+            if processed[y][x]: continue
+
+            if grid[y][x] == "water":
+                if y < len(grid) - 1 and grid[y + 1][x] in ["air"]:
+                    grid[y][x], grid[y + 1][x] = grid[y + 1][x], grid[y][x]
+                else:
+                    direction = random.choice([-1, 1])
+                    if 0 <= x + direction < len(grid[y]) and grid[y][x + direction] in ["air"]:
+                        grid[y][x], grid[y][x + direction] = grid[y][x + direction], grid[y][x]
+                        processed[y][x + direction] = True
+
+            if grid[y][x] == "sand":
+                if y < len(grid) - 1 and grid[y + 1][x] in ["air", "water"]:
+                    grid[y][x], grid[y + 1][x] = grid[y + 1][x], grid[y][x]
+                elif y < len(grid) - 1:
+                    posdirs = []
+                    if x > 0 and grid[y + 1][x - 1] in ["air", "water"]: posdirs.append(-1)
+                    if x < len(grid[y]) - 1 and grid[y + 1][x + 1] in ["air", "water"]: posdirs.append(1)
+                    if posdirs:
+                        direction = random.choice(posdirs)
+                        grid[y][x], grid[y + 1][x + direction] = grid[y + 1][x + direction], grid[y][x]
+                        processed[y + 1][x + direction] = True
+
+    # Отдельная логика для газа (сверху вниз. От 0 до ny):
+    for y in range(len(grid)):
+        for x in range(len(grid[y])):
+            if processed[y][x]: continue
+
+            if grid[y][x] == "gas":
+                if y > 0 and grid[y - 1][x] in ["air", "water", "sand"]:
+                    grid[y][x], grid[y - 1][x] = grid[y - 1][x], grid[y][x]
+                else:
+                    direction = random.choice([-1, 1])
+                    if 0 <= x + direction < len(grid[y]) and grid[y][x + direction] in ["air", "water", "sand"]:
+                        grid[y][x], grid[y][x + direction] = grid[y][x + direction], grid[y][x]
+                        processed[y][x + direction] = True
+
+
 # Основной цикл программы:
 while True:
     start_time = time.time()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            pygame.quit() ; sys.exit()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_s: save_map()
@@ -132,12 +176,16 @@ while True:
             if event.key == pygame.K_n: next_phys_step = True
             if event.key == pygame.K_g: grid_enable = not grid_enable
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            grid_x, grid_y = mouse_x // cell_size, mouse_y // cell_size
+    # Очищаем экран:
+    screen.fill(clear_color)
+
+    # Получаем ввод:
+    keys = pygame.key.get_pressed()
+    mouse_pressed = pygame.mouse.get_pressed()
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    grid_x, grid_y = mouse_x // cell_size, mouse_y // cell_size
 
     # Выбор материала:
-    keys = pygame.key.get_pressed()
     if keys[pygame.K_1]:
         selected = "wall"
     elif keys[pygame.K_2]:
@@ -148,21 +196,14 @@ while True:
         selected = "gas"
 
     # Создать/Удалить клетку:
-    if pygame.mouse.get_pressed()[0]:
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        grid_x, grid_y = mouse_x // cell_size, mouse_y // cell_size
+    if mouse_pressed[0]:
         if (grid_x >= 0 and grid_x < len(grid[0])) and (grid_y >= 0 and grid_y < len(grid)):
             if grid[grid_y][grid_x] == "air": cells += 1
             grid[grid_y][grid_x] = selected
-    elif pygame.mouse.get_pressed()[2]:
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        grid_x, grid_y = mouse_x // cell_size, mouse_y // cell_size
+    elif mouse_pressed[2]:
         if (grid_x >= 0 and grid_x < len(grid[0])) and (grid_y >= 0 and grid_y < len(grid)):
             if grid[grid_y][grid_x] != "air": cells -= 1
             grid[grid_y][grid_x] = "air"
-
-    # Очищаем экран:
-    screen.fill(clear_color)
 
     # Рисуем клетки:
     for y in range(len(grid)):
@@ -183,42 +224,23 @@ while True:
         for y in range(0, grid_size[1]*cell_size, cell_size):
             pygame.draw.line(screen, grid_color, (0, y), (grid_size[0]*cell_size, y))
 
+    # Рисуем обводку выделения клетки:
+    if mouse_pressed[2]:
+        pygame.draw.rect(screen, [255, 0, 0], (grid_x*cell_size, grid_y*cell_size, cell_size, cell_size), 2)
+        pygame.draw.rect(screen, [0, 0, 0], (grid_x*cell_size, grid_y*cell_size, cell_size, cell_size), 1)
+    else:
+        pygame.draw.rect(screen, materials[selected], (grid_x*cell_size, grid_y*cell_size, cell_size, cell_size), 2)
+        pygame.draw.rect(screen, [0, 0, 0], (grid_x*cell_size, grid_y*cell_size, cell_size, cell_size), 1)
+
     # Обновление физики:
     if not is_pause or next_phys_step:
         if next_phys_step: next_phys_step = False
-        for y in range(len(grid) - 1, -1, -1):  # Обработка снизу вверх (от ny до 0):
-            for x in range(len(grid[y])):
-                if grid[y][x] == "water":
-                    if y < len(grid) - 1 and grid[y + 1][x] in ["air"]:
-                        grid[y][x], grid[y + 1][x] = grid[y + 1][x], grid[y][x]
-                    else:
-                        direction = random.choice([-1, 1])
-                        if 0 <= x + direction < len(grid[y]) and grid[y][x + direction] in ["air"]:
-                            grid[y][x], grid[y][x + direction] = grid[y][x + direction], grid[y][x]
-
-                if grid[y][x] == "sand":
-                    if y < len(grid) - 1 and grid[y + 1][x] in ["air", "water"]:
-                        grid[y][x], grid[y + 1][x] = grid[y + 1][x], grid[y][x]
-                    elif y < len(grid) - 1:
-                        if x > 0 and grid[y + 1][x - 1] in ["air", "water"]:
-                            grid[y][x], grid[y + 1][x - 1] = grid[y + 1][x - 1], grid[y][x]
-                        elif x < len(grid[y]) - 1 and grid[y + 1][x + 1] in ["air", "water"]:
-                            grid[y][x], grid[y + 1][x + 1] = grid[y + 1][x + 1], grid[y][x]
-
-        # Отдельная логика для газа (сверху вниз. От 0 до ny):
-        for y in range(len(grid)):
-            for x in range(len(grid[y])):
-                if grid[y][x] == "gas":
-                    if y > 0 and grid[y - 1][x] in ["air", "water", "sand"]:
-                        grid[y][x], grid[y - 1][x] = grid[y - 1][x], grid[y][x]
-                    else:
-                        direction = random.choice([-1, 1])
-                        if 0 <= x + direction < len(grid[y]) and grid[y][x + direction] in ["air", "water", "sand"]:
-                            grid[y][x], grid[y][x + direction] = grid[y][x + direction], grid[y][x]
+        phys_update()
 
     # Устанавливаем заголовок окна:
     pygame.display.set_caption(
-        f"SandBox | Material: {selected.title()} | Cells: {cells} | FPS: {round(1.0/delta_time, 3)} / {float(fps)}"
+        f"SandBox | Material: {selected.title()} | Cells: {cells} / {grid_size[0]*grid_size[1]}"
+        f" | FPS: {round(1.0/delta_time, 3)} / {float(fps)}"
     )
 
     # Обновление экрана:
