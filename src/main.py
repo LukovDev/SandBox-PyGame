@@ -178,10 +178,10 @@ while True:
 
     # Отрисовка сетки:
     if grid_enable:
-        for x in range(0, screen_width, cell_size):
-            pygame.draw.line(screen, grid_color, (x, 0), (x, screen_height))
-        for y in range(0, screen_height, cell_size):
-            pygame.draw.line(screen, grid_color, (0, y), (screen_width, y))
+        for x in range(0, grid_size[0]*cell_size, cell_size):
+            pygame.draw.line(screen, grid_color, (x, 0), (x, grid_size[1]*cell_size))
+        for y in range(0, grid_size[1]*cell_size, cell_size):
+            pygame.draw.line(screen, grid_color, (0, y), (grid_size[0]*cell_size, y))
 
     # Обновление физики:
     if not is_pause or next_phys_step:
