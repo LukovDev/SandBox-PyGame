@@ -1,0 +1,43 @@
+{
+    "fps": 100,
+    "cell-size": 8,
+    "grid-size": [
+        64,
+        64
+    ],
+    "is-pause": false,
+    "grid-enable": false,
+    "clear-color": [
+        0,
+        0,
+        0
+    ],
+    "grid-color": [
+        128,
+        128,
+        128
+    ],
+    "save-load-file": "data/mapsave.sbx",
+    "material-colors": {
+        "wall": [
+            92,
+            92,
+            92
+        ],
+        "water": [
+            0,
+            0,
+            255
+        ],
+        "sand": [
+            255,
+            128,
+            0
+        ],
+        "gas": [
+            32,
+            32,
+            32
+        ]
+    }
+}

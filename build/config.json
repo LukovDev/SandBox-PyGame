@@ -1,0 +1,15 @@
+{
+    "program-name": "SandBox",
+
+    "main-file":    "src/main.py",
+
+    "data-folder":  "data/",
+
+    "program-icon": "data/icons/icon.ico",
+
+    "console-disabled": true,
+
+    "pyinstaller-flags": [
+        "--onefile", "--log-level WARN"
+    ]
+}
