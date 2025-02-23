@@ -22,3 +22,4 @@ N - Следующий шаг симуляции.</br>
 ![](https://github.com/user-attachments/assets/6acfb68a-8046-42ac-bb14-2213a8713736)</br>
 ![](https://github.com/user-attachments/assets/6f22e679-91ec-41af-93aa-436df3ad0ccb)</br>
 ![](https://github.com/user-attachments/assets/489e002d-e0bc-47cd-947d-6a977c53a5c2)</br>
+![](https://github.com/user-attachments/assets/71400dbb-f8a6-4f66-a46d-8693afd2c6cd)
